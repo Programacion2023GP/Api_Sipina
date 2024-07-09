@@ -70,8 +70,8 @@ class ControllerChildrens extends Controller
                 'initialSchedule' => 'required|string',
                 'finalSchedule' => 'required|string',
                 'tutor' => 'required|string',
-                'conditions' => 'required|string',
-                'observations' => 'required|string',
+                // 'conditions' => 'required|string',
+                // 'observations' => 'required|string',
 
             ]);
             $children = Childrens::findOrFail($id);
@@ -266,8 +266,8 @@ class ControllerChildrens extends Controller
                 ->select('childrens.Rfc', DB::raw('count(childrens.Rfc) as total'))
                 ->where('childrens.active', 1);
 
-                if (Auth::check()) {
-                    $user = Auth::user();
+            if (Auth::check()) {
+                $user = Auth::user();
                 if ($user->typeUser == 4) {
                     $childrens = $childrens->where('childrens.users_id', $user->id);
                 }
@@ -283,6 +283,22 @@ class ControllerChildrens extends Controller
         } catch (\Exception $e) {
             error_log('Ocurrió un error: ' . $e->getMessage());
             return response()->json(ObjResponse::CatchResponse('Ocurrió un error.'), 400);
+        }
+    }
+
+    public function RfcExist(Request $request, string $rfc)
+    {
+        try {
+            $childrens = Childrens::where('Rfc', $rfc)->get();
+
+            // if ($childrens->isEmpty()) {
+            //     throw new \Exception('El RFC no existe.');
+            // }
+
+            return response()->json(ObjResponse::CorrectResponse() + ['data' => $childrens], 200);
+        } catch (\Exception $e) {
+            error_log('Ocurrió un error: ' . $e->getMessage());
+            return response()->json(ObjResponse::CatchResponse($e->getMessage()), 400);
         }
     }
 }

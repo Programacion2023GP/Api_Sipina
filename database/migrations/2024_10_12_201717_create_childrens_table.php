@@ -13,20 +13,20 @@ return new class extends Migration
     {
         Schema::create('childrens', function (Blueprint $table) {
             $table->id();
-            $table->string('name',100);
-            $table->string('lastName',100);
-            $table->string('secondSurname',100);
+            $table->string('name', 100);
+            $table->string('lastName', 100);
+            $table->string('secondSurname', 100);
             $table->integer('age');
             $table->date('birtDate');
-            $table->string('placeWas',100);
-            $table->string('Rfc',12);
-            $table->string('typeWork',100);
+            $table->string('placeWas', 100);
+            $table->string('Rfc', 12);
+            $table->string('typeWork', 100);
             $table->time('initialSchedule');
             $table->time('finalSchedule');
-            $table->string('tutor',150);
-            $table->text('conditions');
-            $table->text('observations');
-            $table->foreignId('users_id')->constrained('users','id');
+            $table->string('tutor', 150);
+            $table->text('conditions')->nullable();
+            $table->text('observations')->nullable();
+            $table->foreignId('users_id')->constrained('users', 'id');
             $table->boolean('active')->default(true);
 
             $table->timestamps();

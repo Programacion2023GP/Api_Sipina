@@ -40,6 +40,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('update/{id}', [ControllerChildrens::class, 'update']);
         Route::get('index', [ControllerChildrens::class, 'index']);
         Route::get('rfc', [ControllerChildrens::class, 'rfc']);
+        Route::get('rfc/{rfc}', [ControllerChildrens::class, 'RfcExist']);
+
         Route::get('charts', [ControllerChildrens::class, 'charts']);
 
         

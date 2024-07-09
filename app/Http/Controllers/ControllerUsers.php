@@ -68,7 +68,7 @@ class ControllerUsers extends Controller
                 'email' => 'required|email',
                 'password' => 'required|string',
             ]);
-        
+
             // Intento de autenticación
             if (Auth::attempt($request->only('email', 'password'))) {
                 // Usuario autenticado
@@ -78,14 +78,13 @@ class ControllerUsers extends Controller
                 // Incluir typeUser en la respuesta
                 return response()->json(ObjResponse::CorrectResponse() + ['token' => $token, 'typeUser' => $user->typeUser], 200);
             }
-        
+
             // Error de credenciales
             return response()->json(ObjResponse::CatchResponse('Credenciales inválidas'), 401);
         } catch (\Exception $e) {
             error_log('Error al iniciar sesión: ' . $e->getMessage());
             return response()->json(ObjResponse::CatchResponse('Ocurrió un error al iniciar sesión.'), 400);
         }
-        
     }
 
     /**
@@ -128,7 +127,7 @@ class ControllerUsers extends Controller
             $user->lastName = $request->lastName;
             $user->typeUser = $request->typeUser;
             $user->numberNomina = $request->numberNomina;
-            $user->institution_id = $request->institution_id ? $request->institution_id :null;
+            $user->institution_id = $request->institution_id ? $request->institution_id : null;
             $user->secondSurname = $request->secondSurname;
             $user->save();
 
@@ -144,8 +143,15 @@ class ControllerUsers extends Controller
             $users = User::with(['institution' => function ($query) {
                 $query->select('id', 'name');
             }])
-            ->where('active', 1)
-            ->get(['id', 'numberNomina', 'name', 'lastName', 'secondSurname', 'typeUser', 'email', 'institution_id']);
+                ->where('active', 1);
+            $user = Auth::user();
+
+            if ($user->typeUser == 2) {
+                $users = $users->where('users.typeUser', '>', 2);
+            }
+
+
+            $users =  $users->get(['id', 'numberNomina', 'name', 'lastName', 'secondSurname', 'typeUser', 'email', 'institution_id']);
 
             // Modificar la estructura de datos si es necesario
             $formattedUsers = $users->map(function ($user) {
