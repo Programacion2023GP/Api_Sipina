@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\childrens;
+use App\Models\Childrens;
 use App\Models\ObjResponse;
 use DateTime;
 use Illuminate\Http\Request;
@@ -30,7 +30,7 @@ class ControllerChildrens extends Controller
                 'observations' => 'required|string',
 
             ]);
-            $childrens = childrens::create([
+            $childrens = Childrens::create([
                 'name' => $request->name,
                 'lastName' => $request->lastName,
                 'secondSurname' => $request->secondSurname,
@@ -147,7 +147,7 @@ class ControllerChildrens extends Controller
 
 
 
-            $childrens = childrens::join('users', 'childrens.users_id', '=', 'users.id')
+            $childrens = Childrens::join('users', 'childrens.users_id', '=', 'users.id')
                 ->leftJoin('institutions', 'users.institution_id', '=', 'institutions.id')
                 ->select(
                     'childrens.*',
@@ -250,7 +250,7 @@ class ControllerChildrens extends Controller
     public function destroy(Request $request, int $id)
     {
         try {
-            $childrens = childrens::find($id);
+            $childrens = Childrens::find($id);
             $childrens->active = 0;
             $childrens->save();
             return response()->json(ObjResponse::CorrectResponse() + ['message' => 'eliminado correctamente'], 200);

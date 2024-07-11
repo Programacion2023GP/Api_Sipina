@@ -44,7 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('charts', [ControllerChildrens::class, 'charts']);
 
-        
+
         Route::post('destroy/{id}', [ControllerChildrens::class, 'destroy']);
     });
     Route::prefix('institution')->group(function () {
@@ -54,4 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('index', [ControllerInstitution::class, 'index']);
         Route::post('destroy/{id}', [ControllerInstitution::class, 'destroy']);
     });
+});
+Route::get('/welcome', function () {
+    return 'Bienvenido a Laravel!';
 });
