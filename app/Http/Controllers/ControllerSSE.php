@@ -26,12 +26,14 @@ class ControllerSSE extends Controller
     header("Access-Control-Allow-Headers: *");
 
     // Obtener notificaciones no leídas por el usuario
-    $notifications = DB::table('system')
-        ->join('users_read_notifications', 'users_read_notifications.system_id', '=', 'system.id')
-        ->join('roles', 'users_read_notifications.roles_id', '=', 'roles.id')
-        ->join('notifications', 'users_read_notifications.notifications_id', '=', 'notifications.id')
-        ->where('system.name', $name) // Usar la variable de ruta $name
-        ->where('roles.name', $rol)   // Usar la variable de ruta $rol
+    $notifications = 
+    DB::table('system')
+    //     ->join('users_read_notifications', 'users_read_notifications.system_id', '=', 'system.id')
+    //     ->join('roles', 'users_read_notifications.roles_id', '=', 'roles.id')
+    //     ->join('notifications', 'users_read_notifications.notifications_id', '=', 'notifications.id')
+        ->get();
+        // ->where('system.name', $name) // Usar la variable de ruta $name
+        // ->where('roles.name', $rol)   // Usar la variable de ruta $rol
         // ->whereNotExists(function ($query) use ($id_user) {
         //     $query->select(DB::raw(1))
         //         ->from('users_read_notifications as urn')
@@ -44,7 +46,6 @@ class ControllerSSE extends Controller
         //     'notifications.message',
         //     'users_read_notifications.created_at as read_at'
         // )
-        ->get();
 
     // Enviar el mensaje como un evento SSE
     echo "event: message\n";
