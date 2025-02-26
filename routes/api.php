@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ControllerChildrens;
 use App\Http\Controllers\ControllerInstitution;
+use App\Http\Controllers\ControllerSSE;
 use App\Http\Controllers\ControllerUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +55,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('index', [ControllerInstitution::class, 'index']);
         Route::post('destroy/{id}', [ControllerInstitution::class, 'destroy']);
     });
+});
+Route::prefix('events')->group(function () {
+    Route::get('/sse', [ControllerSSE::class, 'stream']);
+    Route::post('/create', [ControllerSSE::class, 'create']);
+
+    
 });
 Route::get('/welcome', function () {
     return 'Bienvenido a Laravel!';
