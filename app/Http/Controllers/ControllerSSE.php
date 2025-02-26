@@ -44,6 +44,7 @@ class ControllerSSE extends Controller
             'system.name as system_name',
             'roles.name as role_name',
             'notifications.message',
+            'notifications.id_yoursytem',
             'users_read_notifications.created_at as read_at'
         )
         ->get();
@@ -86,6 +87,7 @@ class ControllerSSE extends Controller
             // Crear la notificación
             $notification = ModelsNotification::create([
                 'message' => $request->message,
+                'id_yoursytem' => $request->id_yoursytem,
             ]);
 
             // Crear la relación en users_read_notifications
