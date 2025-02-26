@@ -32,18 +32,18 @@ class ControllerSSE extends Controller
         ->join('notifications', 'users_read_notifications.notifications_id', '=', 'notifications.id')
         ->where('system.name', $name) // Usar la variable de ruta $name
         ->where('roles.name', $rol)   // Usar la variable de ruta $rol
-        ->whereNotExists(function ($query) use ($id_user) {
-            $query->select(DB::raw(1))
-                ->from('users_read_notifications as urn')
-                ->whereColumn('urn.system_id', 'system.id')
-                ->where('urn.id_user', $id_user); // Usar la variable de ruta $id_user
-        })
-        ->select(
-            'system.name as system_name',
-            'roles.name as role_name',
-            'notifications.message',
-            'users_read_notifications.created_at as read_at'
-        )
+        // ->whereNotExists(function ($query) use ($id_user) {
+        //     $query->select(DB::raw(1))
+        //         ->from('users_read_notifications as urn')
+        //         ->whereColumn('urn.system_id', 'system.id')
+        //         ->where('urn.id_user', $id_user); // Usar la variable de ruta $id_user
+        // })
+        // ->select(
+        //     'system.name as system_name',
+        //     'roles.name as role_name',
+        //     'notifications.message',
+        //     'users_read_notifications.created_at as read_at'
+        // )
         ->get();
 
     // Enviar el mensaje como un evento SSE
