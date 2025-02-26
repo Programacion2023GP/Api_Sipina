@@ -7,6 +7,7 @@ use App\Models\System;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Notifications\Notification;
 
 class ControllerSSE extends Controller
 {
@@ -19,7 +20,7 @@ class ControllerSSE extends Controller
         header("Access-Control-Allow-Origin: *");  // Permitir cualquier origen
         header("Access-Control-Allow-Methods: GET");  // Solo permitimos el método GET para SSE
         header("Access-Control-Allow-Headers: *");  // Permitir todos los encabezados
-
+       $notification= System::all();
         // Ruta al archivo donde se guarda el mensaje
 
         // Verificar si el archivo existe
@@ -27,9 +28,9 @@ class ControllerSSE extends Controller
 
             // Enviar el mensaje como un evento SSE
             echo "event: message\n";
-            echo "data: " . json_encode(['message' => 'bienvenido']) . "\n\n";
+            echo "data: " . json_encode(['message' => $notification]) . "\n\n";
        
-            sleep(1);
+            sleep(30);
         // Forzar que el contenido se envíe al cliente
         ob_flush();
         flush();
