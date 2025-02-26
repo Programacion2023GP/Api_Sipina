@@ -57,7 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 Route::prefix('events')->group(function () {
-    Route::get('/sse', [ControllerSSE::class, 'stream']);
+    Route::get('/sse/{name}/{rol}/{id_user}', [ControllerSSE::class, 'stream']);
     Route::post('/create', [ControllerSSE::class, 'create']);
 
     

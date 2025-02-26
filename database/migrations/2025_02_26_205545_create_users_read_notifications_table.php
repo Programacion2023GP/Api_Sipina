@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('system', function (Blueprint $table) {
+        Schema::create('users_read_notifications', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 100);
+            $table->integer('id_user');
+            $table->foreignId('system_id')->constrained('system', 'id');
+            $table->foreignId('roles_id')->constrained('roles', 'id');
+            $table->foreignId('notifications_id')->constrained('notifications', 'id');
 
             $table->timestamps();
         });
@@ -24,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('system');
+        Schema::dropIfExists('users_read_notifications');
     }
 };
