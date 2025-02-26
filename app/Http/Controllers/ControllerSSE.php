@@ -12,33 +12,31 @@ class ControllerSSE extends Controller
 {
     public function stream()
     {
-        return response()->stream(function () {
-            // Envía un mensaje inicial para mantener la conexión abierta
-            echo ": " . PHP_EOL;
-            ob_flush();
-            flush();
-         $notifications = System::all();
-            // Simula eventos en un bucle infinito
-            while (true) {
-                // Genera un mensaje (puedes personalizar esto)
-                $message = json_encode([
-                    'time' => now()->toDateTimeString(),
-                    'message' =>   $notifications
-                ]);
+        // Configurar los encabezados para la transmisión SSE
+        header("Content-Type: text/event-stream");
+        header("Cache-Control: no-cache");
+        header("Connection: keep-alive");
+        header("Access-Control-Allow-Origin: *");  // Permitir cualquier origen
+        header("Access-Control-Allow-Methods: GET");  // Solo permitimos el método GET para SSE
+        header("Access-Control-Allow-Headers: *");  // Permitir todos los encabezados
 
-                // Envía el mensaje al cliente
-                echo "data: $message" . PHP_EOL . PHP_EOL;
-                ob_flush();
-                flush();
+        // Ruta al archivo donde se guarda el mensaje
 
-                // Espera un segundo antes de enviar el siguiente mensaje
-                sleep(30);
-            }
-        }, 200, [
-            'Content-Type' => 'text/event-stream',
-            'Cache-Control' => 'no-cache',
-            'Connection' => 'keep-alive',
-        ]);
+        // Verificar si el archivo existe
+            // Leer el contenido del archivo
+
+            // Enviar el mensaje como un evento SSE
+            echo "event: message\n";
+            echo "data: " . json_encode(['message' => 'bienvenido']) . "\n\n";
+       
+            sleep(1);
+        // Forzar que el contenido se envíe al cliente
+        ob_flush();
+        flush();
+
+        // Opcional: Si deseas mantener la conexión abierta y enviar más mensajes más tarde,
+        // puedes descomentar `sleep()` para simular un retraso en el servidor.
+        // sleep(1);  // Simular un retraso para la recepción del cliente.
     }
     public function create(Request $request, Response $response){
    try {
