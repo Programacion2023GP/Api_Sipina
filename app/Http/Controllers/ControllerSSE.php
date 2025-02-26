@@ -28,25 +28,25 @@ class ControllerSSE extends Controller
     // Obtener notificaciones no leídas por el usuario
     $notifications = 
     DB::table('system')
-    //     ->join('users_read_notifications', 'users_read_notifications.system_id', '=', 'system.id')
-    //     ->join('roles', 'users_read_notifications.roles_id', '=', 'roles.id')
-    //     ->join('notifications', 'users_read_notifications.notifications_id', '=', 'notifications.id')
+        ->join('users_read_notifications', 'users_read_notifications.system_id', '=', 'system.id')
+        ->join('roles', 'users_read_notifications.roles_id', '=', 'roles.id')
+        ->join('notifications', 'users_read_notifications.notifications_id', '=', 'notifications.id')
+     
+        ->where('system.name', $name) 
+        ->where('roles.name', $rol)   // Usar la variable de ruta $rol
+        ->whereNotExists(function ($query) use ($id_user) {
+            $query->select(DB::raw(1))
+                ->from('users_read_notifications as urn')
+                ->whereColumn('urn.system_id', 'system.id')
+                ->where('urn.id_user', $id_user); // Usar la variable de ruta $id_user
+        })
+        ->select(
+            'system.name as system_name',
+            'roles.name as role_name',
+            'notifications.message',
+            'users_read_notifications.created_at as read_at'
+        )
         ->get();
-        // ->where('system.name', $name) // Usar la variable de ruta $name
-        // ->where('roles.name', $rol)   // Usar la variable de ruta $rol
-        // ->whereNotExists(function ($query) use ($id_user) {
-        //     $query->select(DB::raw(1))
-        //         ->from('users_read_notifications as urn')
-        //         ->whereColumn('urn.system_id', 'system.id')
-        //         ->where('urn.id_user', $id_user); // Usar la variable de ruta $id_user
-        // })
-        // ->select(
-        //     'system.name as system_name',
-        //     'roles.name as role_name',
-        //     'notifications.message',
-        //     'users_read_notifications.created_at as read_at'
-        // )
-
     // Enviar el mensaje como un evento SSE
     echo "event: message\n";
     echo "data: " . json_encode(['message' => $notifications]) . "\n\n";
@@ -54,7 +54,15 @@ class ControllerSSE extends Controller
     // Forzar que el contenido se envíe al cliente
     ob_flush();
     flush();
-
+    foreach ($notifications as $notification) {
+        DB::table('users_read_notifications')->insert([
+            'id_user' => $id_user,
+            'system_id' => DB::table('system')->where('name', $name)->value('id'),
+            'roles_id' => DB::table('roles')->where('name', $rol)->value('id'),
+            'notifications_id' => $notification->notification_id,
+            'created_at' => now(),
+        ]);
+    }
     // Simular un retraso para la recepción del cliente
     sleep(30);
 }
