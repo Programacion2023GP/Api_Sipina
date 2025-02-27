@@ -27,7 +27,7 @@ class ControllerSSE extends Controller
     
         // Obtener notificaciones no leídas por el usuario
         $notifications = DB::select("
-        SELECT n.message,n.id_yoursytem 
+        SELECT n.id,n.message,n.id_yoursytem 
         FROM `system` AS s 
         INNER JOIN notifications AS n ON n.system_id = s.id 
         INNER JOIN roles AS r ON r.id = n.roles_id 
@@ -35,6 +35,8 @@ class ControllerSSE extends Controller
             SELECT 1 
             FROM users_read_notifications AS ur 
             WHERE ur.id_user = ?
+            AND ur.notifications_id = n.id
+
         ) 
         AND s.name = ? 
         AND r.name = ?
@@ -56,15 +58,14 @@ class ControllerSSE extends Controller
                 // Verificar si la notificación ya está marcada como leída
                 $exists = DB::table('users_read_notifications')
                     ->where('id_user', $id_user)
-                    ->where('notifications_id', $notification->notification_id)
+                    ->where('notifications_id', $notification->id)
                     ->exists();
     
                 if (!$exists) {
                     DB::table('users_read_notifications')->insert([
                         'id_user' => $id_user,
-                        'system_id' => DB::table('system')->where('name', $name)->value('id'),
-                        'roles_id' => DB::table('roles')->where('name', $rol)->value('id'),
-                        'notifications_id' => $notification->notification_id,
+                  
+                        'notifications_id' => $notification->id,
                         'created_at' => now(),
                     ]);
                 }
@@ -77,7 +78,7 @@ class ControllerSSE extends Controller
         }
     
         // Simular un retraso para la recepción del cliente
-        sleep(8); // Reducido a 2 segundos
+        sleep(20); // Reducido a 2 segundos
     }
 
     public function create(Request $request, Response $response)
