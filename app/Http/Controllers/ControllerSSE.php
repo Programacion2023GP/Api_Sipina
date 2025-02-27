@@ -49,7 +49,7 @@ class ControllerSSE extends Controller
     
         // Enviar el mensaje como un evento SSE
         echo "event: message\n";
-        echo "data: " . json_encode(['message' => $notifications]) . "\n\n";
+        echo "data: " . json_encode(['message' => $notifications->toSql()]) . "\n\n";
     
         // Forzar que el contenido se envíe al cliente
         ob_flush();
