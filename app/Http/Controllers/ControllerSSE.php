@@ -26,86 +26,78 @@ class ControllerSSE extends Controller
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Headers: *");
     
-        // Bucle para mantener la conexión abierta
-        while (true) {
-            // Inicializar un arreglo para las notificaciones exitosas
-            $notificationsSent = [];
+        // Inicializar un arreglo para las notificaciones exitosas
+        $notificationsSent = [];
     
-            // Obtener notificaciones no leídas por el usuario
-            try {
-                $notifications = DB::select("
-                    SELECT n.id, n.message, n.id_yoursytem
-                    FROM `system` AS s
-                    INNER JOIN notifications AS n ON n.system_id = s.id
-                    INNER JOIN roles AS r ON r.id = n.roles_id
-                    WHERE NOT EXISTS (
-                        SELECT 1
-                        FROM users_read_notifications AS ur
-                        WHERE ur.id_user = ?
-                        AND ur.notifications_id = n.id
-                    )
-                    AND s.name = ? 
-                    AND r.name = ?
-                ", [$id_user, $name, $rol]);
-            } catch (Exception $e) {
-                error_log("Error al obtener las notificaciones: " . $e->getMessage());
-                break; // Si ocurre un error, salir del bucle
-            }
+        // Obtener notificaciones no leídas por el usuario
+        try {
+            $notifications = DB::select("
+                SELECT n.id, n.message, n.id_yoursytem
+                FROM `system` AS s
+                INNER JOIN notifications AS n ON n.system_id = s.id
+                INNER JOIN roles AS r ON r.id = n.roles_id
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM users_read_notifications AS ur
+                    WHERE ur.id_user = ?
+                    AND ur.notifications_id = n.id
+                )
+                AND s.name = ? 
+                AND r.name = ?
+            ", [$id_user, $name, $rol]);
+        } catch (Exception $e) {
+            error_log("Error al obtener las notificaciones: " . $e->getMessage());
+            return; // Si ocurre un error, no continuar
+        }
     
-            // Marcar las notificaciones como leídas
-            DB::beginTransaction();
-            try {
-                foreach ($notifications as $notification) {
-                    // Verificar si la notificación ya está marcada como leída
-                    $exists = DB::table('users_read_notifications')
-                        ->where('id_user', $id_user)
-                        ->where('notifications_id', $notification->id)
-                        ->exists();
+        // Marcar las notificaciones como leídas
+        DB::beginTransaction();
+        try {
+            foreach ($notifications as $notification) {
+                // Verificar si la notificación ya está marcada como leída
+                $exists = DB::table('users_read_notifications')
+                    ->where('id_user', $id_user)
+                    ->where('notifications_id', $notification->id)
+                    ->exists();
     
-                    if (!$exists) {
-                        // Intentar insertar la notificación como leída
-                        $inserted = DB::table('users_read_notifications')->insert([
-                            'id_user' => $id_user,
-                            'notifications_id' => $notification->id,
-                            'created_at' => now(),
-                        ]);
+                if (!$exists) {
+                    // Intentar insertar la notificación como leída
+                    $inserted = DB::table('users_read_notifications')->insert([
+                        'id_user' => $id_user,
+                        'notifications_id' => $notification->id,
+                        'created_at' => now(),
+                    ]);
     
-                        // Log de depuración
-                        if ($inserted) {
-                            Log::info('Notificación marcada como leída: ' . $notification->id);
-                            $notificationsSent[] = $notification; // Agregar a las notificaciones enviadas
-                        } else {
-                            Log::error('Error al marcar la notificación como leída: ' . $notification->id);
-                        }
+                    // Log de depuración
+                    if ($inserted) {
+                        Log::info('Notificación marcada como leída: ' . $notification->id);
+                        $notificationsSent[] = $notification; // Agregar a las notificaciones enviadas
+                    } else {
+                        Log::error('Error al marcar la notificación como leída: ' . $notification->id);
                     }
                 }
-                DB::commit();
-            } catch (Exception $ex) {
-                DB::rollBack();
-                // Manejar el error (opcional)
-                Log::error("Error al marcar notificaciones como leídas: " . $ex->getMessage());
-                break; // Si ocurre un error, salir del bucle
             }
-    
-            // Verificar si hay notificaciones para enviar
-            if (!empty($notificationsSent)) {
-                // Enviar las notificaciones como un evento SSE
-                echo "event: message\n";
-                echo "data: " . json_encode(['message' => $notificationsSent]) . "\n\n";
-    
-                // Forzar que el contenido se envíe al cliente
-                ob_flush();
-                flush();
-            }
-    
-            // Verificar si el cliente ha cerrado la conexión
-            if (connection_aborted()) {
-                break; // Salir del bucle si el cliente se desconecta
-            }
-    
-            // Esperar antes de la siguiente iteración (por ejemplo, 5 segundos)
-            sleep(30);
+            DB::commit();
+        } catch (Exception $ex) {
+            DB::rollBack();
+            // Manejar el error (opcional)
+            Log::error("Error al marcar notificaciones como leídas: " . $ex->getMessage());
+            return; // Si ocurre un error, no continuar
         }
+    
+        // Verificar si hay notificaciones para enviar
+       
+            // Enviar las notificaciones como un evento SSE
+            echo "event: message\n";
+            echo "data: " . json_encode(['message' => $notificationsSent]) . "\n\n";
+    
+            // Forzar que el contenido se envíe al cliente
+            ob_flush();
+            flush();
+        
+    
+        // Simular un retraso para la recepción del cliente
+        sleep(20); // Reducción del retraso a 20 segundos o el valor deseado
     }
     
 
