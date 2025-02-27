@@ -26,30 +26,24 @@ class ControllerSSE extends Controller
         header("Access-Control-Allow-Headers: *");
     
         // Obtener notificaciones no leídas por el usuario
-        $notifications = DB::table('system')
-            ->join('users_read_notifications', 'users_read_notifications.system_id', '=', 'system.id')
-            ->join('roles', 'users_read_notifications.roles_id', '=', 'roles.id')
-            ->join('notifications', 'users_read_notifications.notifications_id', '=', 'notifications.id')
-            ->where('system.name', $name)
-            ->where('roles.name', $rol)
-            ->whereNotExists(function ($query) use ($id_user) {
-                $query->select(DB::raw(1))
-                    ->from('users_read_notifications as urn')
-                    ->whereColumn('urn.system_id', 'system.id')
-                    ->where('urn.id_user', $id_user);
-            })
-            ->select(
-                'system.name as system_name',
-                'roles.name as role_name',
-                'notifications.message',
-                'notifications.id as notification_id', // Seleccionar el ID de la notificación
-                'users_read_notifications.created_at as read_at'
-            )
-            ->get();
+        $notifications = DB::select("
+        SELECT n.message,n.id_yoursytem 
+        FROM `system` AS s 
+        INNER JOIN notifications AS n ON n.system_id = s.id 
+        INNER JOIN roles AS r ON r.id = n.roles_id 
+        WHERE NOT EXISTS (
+            SELECT 1 
+            FROM users_read_notifications AS ur 
+            WHERE ur.id_user = ?
+        ) 
+        AND s.name = ? 
+        AND r.name = ?
+    ", [$id_user, $name, $rol]);
+    
     
         // Enviar el mensaje como un evento SSE
         echo "event: message\n";
-        echo "data: " . json_encode(['message' => $notifications->toSql()]) . "\n\n";
+        echo "data: " . json_encode(['message' => $notifications]) . "\n\n";
     
         // Forzar que el contenido se envíe al cliente
         ob_flush();
@@ -106,13 +100,14 @@ class ControllerSSE extends Controller
             $notification = ModelsNotification::create([
                 'message' => $request->message,
                 'id_yoursytem' => $request->id_yoursytem,
+                'system_id' => $request->system_id,
+                'roles_id' => $request->roles_id,
+
             ]);
 
             // Crear la relación en users_read_notifications
             $userReadNotification = UserReadNotification::create([
                 'id_user' => $request->id_user,
-                'system_id' => $system->id,
-                'roles_id' => $role->id,
                 'notifications_id' => $notification->id,
             ]);
 
