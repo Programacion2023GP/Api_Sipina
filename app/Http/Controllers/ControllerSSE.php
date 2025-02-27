@@ -16,19 +16,21 @@ use Illuminate\Support\Facades\Log;
 
 class ControllerSSE extends Controller
 {
-    public function stream($name, $rol, $id_user)
-    {
-        // Configurar los encabezados para la transmisión SSE
-        header("Content-Type: text/event-stream");
-        header("Cache-Control: no-cache");
-        header("Connection: keep-alive");
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Methods: GET");
-        header("Access-Control-Allow-Headers: *");
-    
+public function stream($name, $rol, $id_user)
+{
+    // Configurar los encabezados para la transmisión SSE
+    header("Content-Type: text/event-stream");
+    header("Cache-Control: no-cache");
+    header("Connection: keep-alive");
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: GET");
+    header("Access-Control-Allow-Headers: *");
+
+    // Bucle para mantener la conexión abierta
+    while (true) {
         // Inicializar un arreglo para las notificaciones exitosas
         $notificationsSent = [];
-    
+
         // Obtener notificaciones no leídas por el usuario
         try {
             $notifications = DB::select("
@@ -47,9 +49,9 @@ class ControllerSSE extends Controller
             ", [$id_user, $name, $rol]);
         } catch (Exception $e) {
             error_log("Error al obtener las notificaciones: " . $e->getMessage());
-            return; // Si ocurre un error, no continuar
+            break; // Si ocurre un error, salir del bucle
         }
-    
+
         // Marcar las notificaciones como leídas
         DB::beginTransaction();
         try {
@@ -59,7 +61,7 @@ class ControllerSSE extends Controller
                     ->where('id_user', $id_user)
                     ->where('notifications_id', $notification->id)
                     ->exists();
-    
+
                 if (!$exists) {
                     // Intentar insertar la notificación como leída
                     $inserted = DB::table('users_read_notifications')->insert([
@@ -67,7 +69,7 @@ class ControllerSSE extends Controller
                         'notifications_id' => $notification->id,
                         'created_at' => now(),
                     ]);
-    
+
                     // Log de depuración
                     if ($inserted) {
                         Log::info('Notificación marcada como leída: ' . $notification->id);
@@ -82,23 +84,28 @@ class ControllerSSE extends Controller
             DB::rollBack();
             // Manejar el error (opcional)
             Log::error("Error al marcar notificaciones como leídas: " . $ex->getMessage());
-            return; // Si ocurre un error, no continuar
+            break; // Si ocurre un error, salir del bucle
         }
-    
+
         // Verificar si hay notificaciones para enviar
-       
             // Enviar las notificaciones como un evento SSE
             echo "event: message\n";
             echo "data: " . json_encode(['message' => $notificationsSent]) . "\n\n";
-    
+
             // Forzar que el contenido se envíe al cliente
             ob_flush();
             flush();
         
-    
-        // Simular un retraso para la recepción del cliente
-        sleep(20); // Reducción del retraso a 20 segundos o el valor deseado
+
+        // Verificar si el cliente ha cerrado la conexión
+        // if (connection_aborted()) {
+        //     break; // Salir del bucle si el cliente se desconecta
+        // }
+
+        // Esperar antes de la siguiente iteración (por ejemplo, 5 segundos)
+        sleep(5);
     }
+}
     
 
 
